@@ -1,11 +1,25 @@
-# German-Site
+# WortWise
 
-WortWise is a responsive, static dashboard concept for a German B2-to-C1 learning app. The page uses plain HTML, CSS and JavaScript, with no frontend framework, backend, or package dependencies. Its learning statistics are illustrative sample data; navigation and activity buttons explain that their destinations are not yet available.
+A responsive German B2-to-C1 learning dashboard built with React, TypeScript and Vite. Learning statistics are illustrative sample data; navigation destinations and learning activities show a preview message because the modules are not implemented yet.
 
-## Preview
+## Development
 
-Open `index.html` in a modern browser. An internet connection loads the optional DM Sans and Manrope fonts; local system font fallbacks are used offline.
+Install dependencies and start the local Vite server from the repository root:
 
-## Existing Java entry point
+```sh
+npm ci
+npm run dev
+```
 
-`Main.java` remains the original standalone Java console entry point. The static dashboard runs separately in a browser and does not change or depend on the Java program.
+Open the local URL printed by Vite in your browser.
+
+## Checks
+
+```sh
+npm run lint
+npm run build
+```
+
+## Legacy static version
+
+The original standalone HTML, CSS and JavaScript dashboard is preserved in [`legacy/`](./legacy/).
