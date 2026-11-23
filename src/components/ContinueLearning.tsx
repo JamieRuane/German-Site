@@ -1,8 +1,18 @@
-type ContinueLearningProps = {
-  onActivity: (activity: string) => void
-}
+import { readings } from '../data/readings'
+import type { Location } from '../lib/routes'
+import { useProgress } from '../state/ProgressContext'
 
-export function ContinueLearning({ onActivity }: ContinueLearningProps) {
+export function ContinueLearning({
+  onNavigate,
+}: {
+  onNavigate: (location: Location) => void
+}) {
+  const { state } = useProgress()
+  const reading =
+    readings.find((item) => !state.readings[item.id]) ?? readings[0]
+  const record = state.readings[reading.id]
+  const featuredWord = reading.glossary[0]
+
   return (
     <section className="continue-section" aria-labelledby="continue-title">
       <div className="section-heading continue-heading">
@@ -23,32 +33,32 @@ export function ContinueLearning({ onActivity }: ContinueLearningProps) {
           <div className="art-building art-building-two" />
           <div className="art-building art-building-three" />
           <div className="art-ground" />
-          <span className="art-label">STADTLEBEN · LESESTÜCK</span>
+          <span className="art-label">
+            {reading.topic.split(' · ')[0].toUpperCase()} · LESESTÜCK
+          </span>
         </div>
         <div className="featured-copy">
           <div className="featured-tags">
             <span className="level-tag">B2 → C1</span>
-            <span className="reading-type">READING · 12 MIN</span>
+            <span className="reading-type">
+              READING · {reading.minutes} MIN
+            </span>
           </div>
-          <h3>Wem gehört die Stadt?</h3>
-          <p>
-            How shared spaces, local voices and changing neighbourhoods are
-            reshaping modern city life.
-          </p>
+          <h3 lang="de">{reading.title}</h3>
+          <p>{reading.teaser}</p>
           <div className="featured-footer">
             <div className="feature-word">
-              <span>UP NEXT</span>
-              <strong>der Wandel</strong>
-              <span>change · transformation</span>
+              <span>KEY WORD</span>
+              <strong lang="de">{featuredWord.phrase}</strong>
+              <span>{featuredWord.meaning}</span>
             </div>
             <button
               className="primary-button"
               type="button"
-              onClick={() =>
-                onActivity('Wem gehört die Stadt? — reading exercise')
-              }
+              onClick={() => onNavigate({ route: 'reading', param: reading.id })}
             >
-              Start reading <span aria-hidden="true">→</span>
+              {record ? 'Read again' : 'Start reading'}{' '}
+              <span aria-hidden="true">→</span>
             </button>
           </div>
         </div>
@@ -58,9 +68,9 @@ export function ContinueLearning({ onActivity }: ContinueLearningProps) {
           </span>
           <span>ONE STEP CLOSER</span>
           <span>
-            You&apos;re building
+            {reading.glossary.length} glossed words
             <br />
-            something great.
+            {reading.questions.length} exam questions
           </span>
         </div>
       </article>

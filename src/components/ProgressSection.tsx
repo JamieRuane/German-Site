@@ -1,20 +1,26 @@
-import type { CSSProperties } from 'react'
-
-const studyMinutes = [
-  { day: 'Mon', minutes: 20, height: 28 },
-  { day: 'Tue', minutes: 30, height: 42 },
-  { day: 'Wed', minutes: 25, height: 35 },
-  { day: 'Thu', minutes: 40, height: 56 },
-  { day: 'Fri', minutes: 30, height: 42 },
-  { day: 'Sat', minutes: 45, height: 63 },
-  { day: 'Sun', minutes: 15, height: 21 },
-]
-
-const chartDescription = `Sample study minutes this week: ${studyMinutes
-  .map(({ day, minutes }) => `${day} ${minutes}`)
-  .join(', ')}. Total: 3 hours 25 minutes.`
+import { formatMinutes, lastDays } from '../lib/dates'
+import { useProgress } from '../state/ProgressContext'
+import {
+  deckIds,
+  isActiveDay,
+  learnedCount,
+  minutesOn,
+  streak,
+} from '../state/progressStore'
+import { WeeklyChart } from './WeeklyChart'
 
 export function ProgressSection() {
+  const { state, today } = useProgress()
+  const learned = learnedCount(state)
+  const deckSize = deckIds(state).length
+  const currentStreak = streak(state, today)
+  const week = lastDays(today, 7)
+  const weekTotal = week.reduce((sum, day) => sum + minutesOn(state, day), 0)
+  const reviewsThisWeek = week.reduce(
+    (sum, day) => sum + (state.log[day]?.reviews ?? 0),
+    0,
+  )
+
   return (
     <section className="progress-section" aria-labelledby="progress-title">
       <div className="section-heading progress-heading">
@@ -24,7 +30,7 @@ export function ProgressSection() {
         </div>
         <span className="sample-caption">
           <span className="sample-dot" aria-hidden="true" />
-          All figures are sample data
+          Saved on this device
         </span>
       </div>
       <div className="progress-grid">
@@ -39,15 +45,14 @@ export function ProgressSection() {
             </span>
           </div>
           <div className="stat-value">
-            284 <span>words</span>
+            {learned} <span>of {deckSize}</span>
           </div>
           <div className="stat-trend">
-            <span className="trend-up">↗ 12%</span>
-            <span>vs. last week</span>
+            <span>Learned = remembered for 7+ days</span>
           </div>
           <div className="stat-bottom">
-            <span>NEW THIS WEEK</span>
-            <strong>+18 words</strong>
+            <span>REVIEWS THIS WEEK</span>
+            <strong>{reviewsThisWeek}</strong>
           </div>
         </article>
 
@@ -59,47 +64,44 @@ export function ProgressSection() {
             </span>
           </div>
           <div className="stat-value">
-            9 <span>days</span>
+            {currentStreak} <span>day{currentStreak === 1 ? '' : 's'}</span>
           </div>
           <div className="stat-trend streak-note">
-            <span>Du bist in Schwung!</span> You&apos;re on a roll!
+            {currentStreak >= 3 ? (
+              <>
+                <span lang="de">Du bist in Schwung!</span> You&apos;re on a roll!
+              </>
+            ) : (
+              <>
+                <span lang="de">Dranbleiben!</span> Study daily to build a streak.
+              </>
+            )}
           </div>
           <div
             className="streak-dots"
-            aria-label="Sample streak: nine consecutive days"
+            role="img"
+            aria-label={`Study days in the last 7 days: ${
+              week.filter((day) => isActiveDay(state.log[day])).length
+            } of 7`}
           >
-            {Array.from({ length: 9 }, (_, index) => (
-              <span key={index} />
-            ))}
-            <i />
+            {week.map((day) =>
+              isActiveDay(state.log[day]) ? (
+                <span key={day} />
+              ) : (
+                <i key={day} />
+              ),
+            )}
           </div>
         </article>
 
         <article className="stat-card chart-card">
           <div className="stat-heading">
             <span>
-              STUDY TIME <span className="stat-period">THIS WEEK</span>
+              STUDY TIME <span className="stat-period">LAST 7 DAYS</span>
             </span>
-            <span className="chart-total">3h 25m</span>
+            <span className="chart-total">{formatMinutes(weekTotal)}</span>
           </div>
-          <div
-            className="activity-chart"
-            role="img"
-            aria-label={chartDescription}
-          >
-            {studyMinutes.map(({ day, height }) => (
-              <div
-                className={`chart-column${day === 'Sat' ? ' is-today' : ''}`}
-                key={day}
-              >
-                <span
-                  className="chart-bar"
-                  style={{ '--bar-height': `${height}%` } as CSSProperties}
-                />
-                <span>{day}</span>
-              </div>
-            ))}
-          </div>
+          <WeeklyChart />
         </article>
       </div>
     </section>
