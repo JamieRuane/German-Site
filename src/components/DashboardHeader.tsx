@@ -2,6 +2,9 @@ import type { RefObject } from 'react'
 import { Icon } from './Icon'
 
 type DashboardHeaderProps = {
+  pageLabel: string
+  dateLabel: string
+  pendingCount: number
   isSidebarOpen: boolean
   menuToggleRef: RefObject<HTMLButtonElement | null>
   onMenuToggle: () => void
@@ -9,6 +12,9 @@ type DashboardHeaderProps = {
 }
 
 export function DashboardHeader({
+  pageLabel,
+  dateLabel,
+  pendingCount,
   isSidebarOpen,
   menuToggleRef,
   onMenuToggle,
@@ -30,21 +36,27 @@ export function DashboardHeader({
       <div className="breadcrumb">
         <span>YOUR SPACE</span>
         <span className="breadcrumb-divider">/</span>
-        <strong>Dashboard</strong>
+        <strong>{pageLabel}</strong>
       </div>
       <div className="topbar-right">
         <span className="today-date">
           <span className="date-dot" aria-hidden="true" />
-          Saturday, October 17
+          {dateLabel}
         </span>
         <button
           className="icon-button notification-button"
           type="button"
-          aria-label="Notifications — no new notifications"
+          aria-label={
+            pendingCount > 0
+              ? `Notifications — ${pendingCount} cards due`
+              : 'Notifications — nothing due'
+          }
           onClick={onNotification}
         >
           <Icon name="notification" />
-          <span className="notification-dot" aria-hidden="true" />
+          {pendingCount > 0 && (
+            <span className="notification-dot" aria-hidden="true" />
+          )}
         </button>
       </div>
     </header>

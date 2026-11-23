@@ -1,32 +1,36 @@
+import type { Location, Route } from '../lib/routes'
+import { routeLabels } from '../lib/routes'
+import { useProgress } from '../state/ProgressContext'
+import { dueCount, newAllowance } from '../state/progressStore'
 import { Icon, type IconName } from './Icon'
 
-type NavigationItem = {
-  label: string
-  icon: IconName
-}
-
-const navigationItems: NavigationItem[] = [
-  { label: 'Dashboard', icon: 'dashboard' },
-  { label: 'Vocabulary', icon: 'vocabulary' },
-  { label: 'Reading', icon: 'reading' },
-  { label: 'Writing', icon: 'writing' },
-  { label: 'Grammar', icon: 'grammar' },
-  { label: 'Progress', icon: 'progress' },
+const navigationItems: { route: Route; icon: IconName }[] = [
+  { route: 'dashboard', icon: 'dashboard' },
+  { route: 'vocabulary', icon: 'vocabulary' },
+  { route: 'reading', icon: 'reading' },
+  { route: 'writing', icon: 'writing' },
+  { route: 'grammar', icon: 'grammar' },
+  { route: 'progress', icon: 'progress' },
 ]
 
 type SidebarProps = {
   isOpen: boolean
+  currentRoute: Route
   onClose: () => void
-  onMessage: (message: string) => void
+  onNavigate: (location: Location) => void
 }
 
-export function Sidebar({ isOpen, onClose, onMessage }: SidebarProps) {
-  function handleNavigation(label: string) {
-    if (label !== 'Dashboard') {
-      onMessage(
-        `${label} is part of the WortWise learning plan, but isn't available yet.`,
-      )
-    }
+export function Sidebar({
+  isOpen,
+  currentRoute,
+  onClose,
+  onNavigate,
+}: SidebarProps) {
+  const { state, today } = useProgress()
+  const cardsWaiting = dueCount(state, today) + newAllowance(state, today)
+
+  function go(route: Route) {
+    onNavigate({ route })
     onClose()
   }
 
@@ -36,6 +40,7 @@ export function Sidebar({ isOpen, onClose, onMessage }: SidebarProps) {
         className={`sidebar-backdrop${isOpen ? ' is-visible' : ''}`}
         type="button"
         aria-label="Dismiss navigation"
+        tabIndex={isOpen ? 0 : -1}
         onClick={onClose}
       />
       <aside
@@ -43,7 +48,12 @@ export function Sidebar({ isOpen, onClose, onMessage }: SidebarProps) {
         id="sidebar"
         aria-label="Main navigation"
       >
-        <a className="brand" href="#main-content" aria-label="LinguaForge home">
+        <a
+          className="brand"
+          href="#/dashboard"
+          aria-label="LinguaForge home"
+          onClick={onClose}
+        >
           <span className="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 32 32" fill="none" focusable="false">
               <path
@@ -61,20 +71,22 @@ export function Sidebar({ isOpen, onClose, onMessage }: SidebarProps) {
 
         <p className="sidebar-label">YOUR LEARNING SPACE</p>
         <nav className="primary-nav" aria-label="Learning">
-          {navigationItems.map(({ label, icon }) => {
-            const isCurrent = label === 'Dashboard'
+          {navigationItems.map(({ route, icon }) => {
+            const isCurrent = route === currentRoute
             return (
               <button
-                key={label}
+                key={route}
                 className={`nav-link${isCurrent ? ' is-active' : ''}`}
                 type="button"
                 aria-current={isCurrent ? 'page' : undefined}
-                onClick={() => handleNavigation(label)}
+                onClick={() => go(route)}
               >
                 <Icon name={icon} />
-                <span>{label}</span>
-                {label === 'Vocabulary' && (
-                  <span className="nav-count">12</span>
+                <span>{routeLabels[route]}</span>
+                {route === 'vocabulary' && cardsWaiting > 0 && (
+                  <span className="nav-count" aria-label={`${cardsWaiting} cards waiting`}>
+                    {cardsWaiting}
+                  </span>
                 )}
               </button>
             )
@@ -88,14 +100,17 @@ export function Sidebar({ isOpen, onClose, onMessage }: SidebarProps) {
             </span>
             <p className="tip-eyebrow">A LITTLE REMINDER</p>
             <p>
-              Small steps, <strong>starke Sprache.</strong>
+              Kleine Schritte, <strong>starke Sprache.</strong>
             </p>
             <span className="tip-translation">Small steps, strong language.</span>
           </div>
           <button
-            className="nav-link settings-link"
+            className={`nav-link settings-link${
+              currentRoute === 'settings' ? ' is-active' : ''
+            }`}
             type="button"
-            onClick={() => handleNavigation('Settings')}
+            aria-current={currentRoute === 'settings' ? 'page' : undefined}
+            onClick={() => go('settings')}
           >
             <Icon name="settings" />
             <span>Settings</span>
@@ -106,11 +121,8 @@ export function Sidebar({ isOpen, onClose, onMessage }: SidebarProps) {
             </div>
             <div className="profile-copy">
               <span className="profile-name">Jamie</span>
-              <span className="profile-level">B2 learner</span>
+              <span className="profile-level">B2 → C1</span>
             </div>
-            <span className="profile-menu" aria-hidden="true">
-              ···
-            </span>
           </div>
         </div>
       </aside>
